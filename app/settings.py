@@ -144,7 +144,7 @@ GOOGLE_API_KEY = 'AIzaSyAFYqG1ONwV4Ob6BloUnchNZeKLNF3Hm94'
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'es-CO'
+LANGUAGE_CODE = 'es-ES'
 
 TIME_ZONE = 'America/Bogota'
 
