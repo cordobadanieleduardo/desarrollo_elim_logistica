@@ -74,7 +74,8 @@ class Conductor(ClaseModelo):
     nombre = models.CharField(max_length=50,help_text= "Nombre del conductor")
 
     def __str__(self):
-        return '{}'.format(self.nombre)
+        # return '{}'.format(self.nombre)
+        return f'{self.nombre}'
     
     def save(self):
         super(Conductor,self).save()
@@ -118,6 +119,7 @@ class Vehiculo(ClaseModelo):
         return self.placa
     
     def save(self):
+        self.placa = self.placa.upper()
         super(Vehiculo,self).save()
 
     class Meta:
@@ -173,7 +175,8 @@ class Servicio(ClaseModelo):
     legalizado = models.CharField(max_length=15,choices=Legalizado,default=Legalizado.sin_legalizar,help_text= "Legalizado")
     
     def __str__(self):
-        return '{}'.format(self.placa)
+        return f'{self.placa}'
+        # return '{}'.format(self.placa)
     
     def save(self):
         super(Servicio,self).save()
@@ -217,8 +220,9 @@ class Medio_pago(models.TextChoices):
         CONTADO = "CONTADO", _("Contado")
         CREDITO = "CREDITO", _("Crédito")
         TRANSFERENCIA = "TRANSFERENCIA", _("Transferencia")
-class Registro(ClaseModelo):
-    
+        CHIP = "CHIP", _("Chip")
+
+class Registro(ClaseModelo):    
     numero_registo = models.UUIDField(default=uuid.uuid4,max_length=80)    
     fecha = models.DateTimeField(null=True,blank=True)
     direccion = models.CharField(max_length=200,null=False,blank=False)
@@ -300,42 +304,58 @@ class PerfilConductor(models.Model):
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.CASCADE)
     
     def __str__(self):
-        return '{}'.format(self.vehiculo)    
+        return f'{self.vehiculo}'
+        # return '{}'.format(self.vehiculo)    
     class Meta:
         verbose_name_plural = 'Perfil de conductores'
-
-
 
 class GastoConductor(ClaseModelo):    
     class Concepto(models.TextChoices):
         GASOLINA = "gasolina", _("Gasolina")
         PEAJE = "peaje", _("Peajes")
         OTRO = "otro", _("Otro")
-    
-    class Medio(models.TextChoices):
-        CONTADO = "efectivo", _("Efectivo")
-        CREDITO = "chip", _("Chip")
 
     numero_registro = models.UUIDField(default=uuid.uuid4,max_length=80)    
     fecha = models.DateTimeField(blank=True, null=True)
     concepto = models.CharField(max_length=15,choices=Concepto,default=Concepto.GASOLINA)
-    medio_pago = models.CharField(max_length=15,choices=Medio,default=Medio.CONTADO)
-    valor = models.DecimalField(max_digits=9,decimal_places=2,default=0.0,
-        validators=[MaxValueValidator(1000000), MinValueValidator(10000)])
+    factura = models.CharField(max_length=20)
+    medio_pago = models.CharField(max_length=15,choices=Medio_pago,default=Medio_pago.CONTADO)
+    valor = models.DecimalField(max_digits=9,decimal_places=2,validators=[MaxValueValidator(1000000), MinValueValidator(10000)])
+    descripcion = models.CharField(max_length=200)
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.RESTRICT)
     placa = models.CharField(max_length=6)
     cedula = models.IntegerField()
     conductor = models.CharField(blank=True,max_length=200)
     imagen = models.ImageField(upload_to="gastos")
+    # estado aceptado, rechazado    
+    efectivo = models.DecimalField(max_digits=9, decimal_places=2,default=0.0,blank=True)
+    credito = models.DecimalField(max_digits=9, decimal_places=2,default=0.0,blank=True)
+    transferencia = models.DecimalField(max_digits=9, decimal_places=2,default=0.0,blank=True)
+    estado_aceptacion = models.BooleanField(blank=True, null=True)
+    usuario_aceptacion = models.CharField(max_length=20,blank=True, null=True)
+    usuario_rechazo = models.CharField(max_length=20,blank=True, null=True)
 
     def __str__(self):
         return f'{self.fecha}'
     
     class Meta:
         verbose_name_plural = 'Gastos del conductor'
-        
+
     def save(self):
-        self.placa = self.placa.upper()
+        self.placa = self.placa.upper()        
+        if self.medio_pago == Medio_pago.CONTADO:
+            self.credito = float(0)
+            self.transferencia = float(0)
+            self.efectivo = float(self.valor)
+        elif self.medio_pago in [Medio_pago.CREDITO , Medio_pago.CHIP]:
+            self.credito = float(self.valor)
+            self.transferencia = float(0)
+            self.efectivo = float(0)
+        elif self.medio_pago == Medio_pago.TRANSFERENCIA:
+            self.credito = float(0)
+            self.transferencia = float(self.valor)        
+            self.efectivo = float(0)
+
         return super().save()
     
 

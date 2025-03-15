@@ -358,9 +358,11 @@ class GastoConductorForm(forms.ModelForm):
     #                              )
     class Meta:
         model = GastoConductor
-        fields = ( 'fecha','valor','concepto','medio_pago','imagen')
-        exclude = ['um','fm','uc','fc','numero_registro','placa','cedula','conductor','vehiculo']
-    
+        fields = ( 'fecha','factura','valor','concepto','medio_pago','descripcion','imagen','estado_aceptacion')
+        exclude = ['um','fm','uc','fc','numero_registro','placa','cedula','conductor',
+                'vehiculo', 'efectivo', 'credito', 'transferencia',
+                'usuario_aceptacion','usuario_rechazo'
+        ]
         # wiget = {
         #     'fecha':forms.DateTimeInput(),
         # }

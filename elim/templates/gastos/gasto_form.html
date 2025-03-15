@@ -41,11 +41,22 @@
                                 <div class="dropdown-divider"></div>
                                 {{form.fecha.label}}
                                 <input type="datetime" name="fecha" id="fecha" required class="form-control" maxlength="19" autocomplete="off">
+                                {{form.factura.label}}
+                                {{form.factura}}
+                                <br>
                                 {{form.valor.label}}
                                 {{form.valor}} 
                                 {{form.medio_pago}}
                                 {{form.concepto}}
+                                <br>
+                                {{form.descripcion.label}}
+                                {{form.descripcion}}
                                 {{form.imagen}}
+                                <br>
+                                {% if request.user.is_superuser  %}
+                                    <label for="id_estado_aceptacion" class="form-control"> Aceptar o rechazar</label>
+                                    {{form.estado_aceptacion}}
+                                {% endif %}
                                 <div class="dropdown-divider"></div>
                                 <div class="row">
                                     <div class="col">
@@ -71,16 +82,15 @@
 
 {% block js_page %}
 <script>
+    $(function () {
+        $("#sidebarToggle").click();
+        $("#fecha").val("{{ obj.fecha|date:'d/m/Y H:i:s' }}");
+    });
 
     $("#fecha").datetimepicker({
         format: 'd/m/Y H:i:s',
         timepicker:true,
-     // minDate:'16/02/2025 00:00:00'    
-    });
-
-    $(function () {
-        $("#fecha").val("{{ obj.fecha|date:'d/m/Y H:i:s' }}");
-    });
+    });    
 </script>
 
 {% endblock %}

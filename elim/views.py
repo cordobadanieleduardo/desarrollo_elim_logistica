@@ -163,12 +163,6 @@ class ConductorView(SinPrivilegios, generic.ListView):
             
             # return redirect('elim:trayecto_view')
         return context
-        
-        
-        
-   
-       # context[""] = 
-    
 
 class ConductorEdit(VistaBaseEdit):
     permission_required = "elim.change_vehiculo"
@@ -223,9 +217,8 @@ class TrayectoEdit(VistaBaseEdit):
 
 @login_required(login_url="/login/")
 @permission_required("elim.change_trayecto",login_url="/login/")
-def direccion_inactivar(request,id):
-    reg = Trayecto.objects.filter(pk=id).first()
-    if reg:
+def direccion_inactivar(request,id):    
+    if reg:= Trayecto.objects.filter(pk=id).first():
         reg.estado = not reg.estado
         reg.save()
         return redirect('elim:trayecto_list')   
@@ -265,9 +258,8 @@ class VehiculoEdit(VistaBaseEdit):
 
 @login_required(login_url="/login/")
 @permission_required("elim.change_vehiculo",login_url="/login/")
-def vehiculo_inactivar(request,pk):
-    reg = Vehiculo.objects.filter(pk=pk).first()
-    if reg:
+def vehiculo_inactivar(request,pk):     
+    if reg:= Vehiculo.objects.filter(pk=pk).first():
         reg.estado = not reg.estado
         reg.save()
         return redirect('elim:vehiculo_list')   
@@ -846,7 +838,8 @@ class MapConductorView(View):
                 duration_traffic_mins = duration_in_traffic_minutes
             )
             messages.success(request,'Servicio actualizado')
-            obj.save()            
+            obj.save() 
+            #self._extracted_from_post_4(form, request)           
         else:
             messages.success(request,'Error al intentar calcular la distancia') 
             print(form.errors)
@@ -939,9 +932,11 @@ class GastoConductorView(SinPrivilegios, generic.ListView):
     context_object_name = "obj"
     ordering = ['-id']
     
-    def get_queryset(self):                
-        if PerfilConductor.objects.filter(usuario = self.request.user):                 
-            return super().get_queryset().filter(placa=PerfilConductor.objects.get(usuario = self.request.user))
+    def get_queryset(self):        
+        if self.request.user.is_superuser:
+            return super().get_queryset().filter(estado = True)
+        elif perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():
+            return super().get_queryset().filter(vehiculo= perfil.vehiculo, estado = True)
 
 class GastoConductorNew(VistaBaseCreate):
     model=GastoConductor
@@ -952,30 +947,29 @@ class GastoConductorNew(VistaBaseCreate):
     success_message="Gasto creado satisfactoriamente"
     permission_required="elim.add_gastoconductor"
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        registro = GastoConductor
-        registro.fecha = datetime.now
+        registro = GastoConductor(fecha = datetime.now)
         context ['obj'] = registro
         return context
     
     def form_invalid(self, form, **kwargs):
-        context = super().get_context_data(**kwargs)
-        registro = GastoConductor
+        context = super().get_context_data(**kwargs)        
         if self.request.POST:
-            form = GastoConductorForm(self.request.POST, self.request.FILES)
-            registro.fecha = self.request.POST.get('fecha')
-            registro.valor = self.request.POST.get('valor')
-        context ['obj'] = registro
-        context ['form'] = form
-        return render(self.request, self.template_name, context)
+            # form = GastoConductorForm(self.request.POST, self.request.FILES)            
+            registro = GastoConductor(
+                fecha = self.request.POST.get('fecha'),
+                valor = self.request.POST.get('valor')
+            )
+            form.instance.fecha = registro.fecha
+            context ['obj'] = registro
+            context ['form'] = form
+        return render(self.request, self.template_name)
     
     def form_valid(self, form):
         form.instance.uc = self.request.user
-        if PerfilConductor.objects.filter(usuario = self.request.user):
-            perfil = PerfilConductor.objects.get(usuario = self.request.user)
-            vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo_id)
+        if perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():        
+            vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo.pk)
             form.instance.vehiculo = vehiculo
             form.instance.placa = perfil.vehiculo_id
             form.instance.cedula = vehiculo.conductor.cedula
@@ -1013,13 +1007,20 @@ class GastoConductorEdit(VistaBaseEdit):
 
     def form_valid(self, form):
         form.instance.um = self.request.user.id
-        if PerfilConductor.objects.filter(usuario = self.request.user):
-            perfil = PerfilConductor.objects.get(usuario = self.request.user)
-            vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo_id)
+        if perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():            
+            vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo)
             form.instance.vehiculo = vehiculo
             form.instance.placa = perfil.vehiculo_id
             form.instance.cedula = vehiculo.conductor.cedula
-            form.instance.conductor = vehiculo.conductor.nombre
+            form.instance.conductor = vehiculo.conductor.nombre                        
+            if form.instance.estado_aceptacion is None:                
+                form.instance.usuario_aceptacion = None
+                form.instance.usuario_rechazo = None
+            elif bool(form.instance.estado_aceptacion):                
+                form.instance.usuario_aceptacion = self.request.user.username                
+            else:                
+                form.instance.usuario_rechazo = self.request.user.username
+            
         return super().form_valid(form)
 
 # def book_detail(request, book_id):
