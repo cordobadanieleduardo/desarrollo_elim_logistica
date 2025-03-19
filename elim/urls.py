@@ -78,29 +78,6 @@ urlpatterns = [
     path('conductor/viaje/reporte/list/',views.ViajeView.as_view(), name='repo_viaje_list'),    
     path('conductor/viaje/reporte/detail/<int:pk>',views.ViajeDetailView.as_view(), name='repo_viaje_detail'),
     
-    
-    
-    # path('reporte/<int:compra_id>/imprimir', imprimir_compra,name="compras_print_one"),
-
-#     path('subcategorias/',SubCategoriaView.as_view(), name='subcategoria_list'),
-#     path('subcategorias/new',SubCategoriaNew.as_view(), name='subcategoria_new'),
-#     path('subcategorias/edit/<int:pk>',SubCategoriaEdit.as_view(), name='subcategoria_edit'),
-#     path('subcategorias/delete/<int:pk>',SubCategoriaDel.as_view(), name='subcategoria_del'),
-
-#     path('marcas/',MarcaView.as_view(), name="marca_list"),
-#     path('marcas/new',MarcaNew.as_view(), name="marca_new"),
-#     path('marcas/edit/<int:pk>',MarcaEdit.as_view(), name="marca_edit"),
-#     path('marcas/inactivar/<int:id>',marca_inactivar, name="marca_inactivar"),
-
-#     path('um/',UMView.as_view(), name="um_list"),
-#     path('um/new',UMNew.as_view(), name="um_new"),
-#     path('um/edit/<int:pk>',UMEdit.as_view(), name="um_edit"),
-#     path('um/inactivar/<int:id>',um_inactivar, name="um_inactivar"),
-
-#     path('productos/',ProductoView.as_view(), name="producto_list"),
-#     path('productos/new',ProductoNew.as_view(), name="producto_new"),
-#     path('productos/edit/<int:pk>',ProductoEdit.as_view(), name="producto_edit"),
-#     path('productos/inactivar/<int:id>',producto_inactivar, name="producto_inactivar"),
 ]
 
 
@@ -109,6 +86,7 @@ router.register("api/paises", views.PaisesViewSet, basename="paises")
 router.register("api/museos", views.MuseoViewSet, basename="museos_list")
 router.register("api/clientes", views.ClientesViewSet, basename="clientes")
 router.register("v1/clientes/", views.ClientesViewSet, basename="clientes_list")
+# router.register("v1/gastos", views.GastoConductorViewSet, basename="gastos__list")
 
 urlpatterns += router.urls
 urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

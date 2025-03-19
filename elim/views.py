@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.utils import timezone
-from .serializers import MuseoSerializer, PaisSerializer,ClienteSerializer
+from .serializers import MuseoSerializer, PaisSerializer,ClienteSerializer, GastoConductorSerializer 
 
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
@@ -598,6 +598,15 @@ class ClientesViewSet(viewsets.ModelViewSet):
     search_fields = ["nombre"]
     ordering_fields = '__all__'
 
+# class GastoConductorViewSet(viewsets.ModelViewSet):
+#     serializer_class = GastoConductorSerializer
+#     queryset = GastoConductor.objects.all()
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+#     filterset_fields = ['id', "placa"]
+#     search_fields = ["placa"]
+#     ordering_fields = '__all__'
+
+
 
 class HomeTrayectosView(generic.ListView):
     template_name = "trayectos/home.html"
@@ -931,12 +940,6 @@ class GastoConductorView(SinPrivilegios, generic.ListView):
     template_name = "gastos/gasto_list.html"
     context_object_name = "obj"
     ordering = ['-id']
-    
-    def get_queryset(self):        
-        if self.request.user.is_superuser:
-            return super().get_queryset().filter(estado = True)
-        elif perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():
-            return super().get_queryset().filter(vehiculo= perfil.vehiculo, estado = True)
 
 class GastoConductorNew(VistaBaseCreate):
     model=GastoConductor

@@ -1,3 +1,21 @@
 {
-    "pythonIndent.useTabOnHangingIndent": true
+    "pythonIndent.useTabOnHangingIndent": true,
+    "cSpell.words": [
+        "aceptacion",
+        "concepto",
+        "credito",
+        "Crédito",
+        "datos",
+        "descripcion",
+        "efectivo",
+        "estado",
+        "factura",
+        "fecha",
+        "Gasto",
+        "gastos",
+        "medio",
+        "pago",
+        "Perfil",
+        "transferencia"
+    ]
 }
