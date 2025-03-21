@@ -2,20 +2,29 @@
     "pythonIndent.useTabOnHangingIndent": true,
     "cSpell.words": [
         "aceptacion",
+        "cliente",
         "concepto",
         "credito",
         "Crédito",
         "datos",
         "descripcion",
+        "direccion",
         "efectivo",
+        "elim",
         "estado",
         "factura",
         "fecha",
         "Gasto",
         "gastos",
+        "inactivar",
         "medio",
         "pago",
         "Perfil",
-        "transferencia"
+        "placa",
+        "Proveedor",
+        "Registro",
+        "transferencia",
+        "Trayecto",
+        "vehiculos"
     ]
 }

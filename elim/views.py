@@ -1,4 +1,4 @@
-import os
+from multiprocessing.managers import BaseManager
 from django.shortcuts import get_object_or_404,render, redirect
 from django.contrib.auth.models import User
 from django.views import generic
@@ -6,35 +6,37 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import  DjangoFilterBackend
+from django_filters import rest_framework as filters2
 from django.http import JsonResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.utils import timezone
-from .serializers import MuseoSerializer, PaisSerializer,ClienteSerializer, GastoConductorSerializer 
 
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.decorators import login_required, permission_required
 
-from .models import Cliente,Proveedor,Servicio,Vehiculo \
-    ,Programador,Trayecto,Persona,Museo, Pais, Registro \
-        , Locations,Distances,PerfilConductor , GastoConductor, Viaje
-from .forms import ClienteForm,ProveedorForm,\
-                ServicioForm, MuseoForm , RegistroForm,\
-                DistanceForm, TrayectoForm, VehiculoForm,ConductorForm , GastoConductorForm ,\
-                    ViajeConductorForm
-
 from bases.views import SinPrivilegios
 from django.views import View
 from datetime import datetime
 from django.conf import settings
-    
 
 import json
 import requests
 import googlemaps
+import os
 
 
+from .models import Cliente, GastoConductor,Proveedor,Servicio,Vehiculo \
+    ,Programador,Trayecto,Persona,Museo, Pais, Registro \
+        , Locations,Distances,PerfilConductor , Viaje
+from .forms import ClienteForm,ProveedorForm,\
+                ServicioForm, MuseoForm , RegistroForm,\
+                DistanceForm, TrayectoForm, VehiculoForm,ConductorForm , GastoConductorForm ,\
+                    ViajeConductorForm, GastoConductorFormFilter
+
+from .serializers import MuseoSerializer, PaisSerializer,ClienteSerializer,GastoConductorSerializer 
+from .filterset import GastoConductorFilter
 
 # Create your views base.
 
@@ -93,9 +95,8 @@ class ClienteDel(SuccessMessageMixin, SinPrivilegios, generic.DeleteView):
 
 @login_required(login_url="/login/")
 @permission_required("elim.change_cliente",login_url="/login/")
-def cliente_inactivar(request,id):
-    cliente = Cliente.objects.filter(pk=id).first()
-    if cliente:
+def cliente_inactivar(request,id): 
+    if cliente:=Cliente.objects.filter(pk=id).first():
         cliente.estado = not cliente.estado
         cliente.save()
         return redirect('elim:cliente_list')    
@@ -940,6 +941,15 @@ class GastoConductorView(SinPrivilegios, generic.ListView):
     template_name = "gastos/gasto_list.html"
     context_object_name = "obj"
     ordering = ['-id']
+    serializer_class = GastoConductorSerializer
+    filter_backends = (filters2.DjangoFilterBackend,)
+    filterset_fields = ('fecha', 'factura','medio_pago')
+    
+    def get_context_data(self, **kwargs):    
+        context = super().get_context_data(**kwargs)
+        context["form"] = GastoConductorFormFilter(self.request.GET)
+        return context
+
 
 class GastoConductorNew(VistaBaseCreate):
     model=GastoConductor
@@ -992,18 +1002,14 @@ class GastoConductorEdit(VistaBaseEdit):
         try:
             reg = GastoConductor.objects.get(id=pk)
             form = GastoConductorForm (instance=reg)            
-            context = {
-                'form': form,
-                'obj': reg
-            }
+            context = {'form': form,'obj': reg}
             return render(request, self.template_name, context)
         except GastoConductor.DoesNotExist:
             return JsonResponse({'error': 'Gasto del conductor no encontrado'}, status=404)
         except Exception as e:
             # Log the error here
             return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
-    
-    
+
     def form_invalid(self, form,  **kwargs):
         context = super().get_context_data(**kwargs)
         return render(self.request, self.template_name, context)
@@ -1022,8 +1028,7 @@ class GastoConductorEdit(VistaBaseEdit):
             elif bool(form.instance.estado_aceptacion):                
                 form.instance.usuario_aceptacion = self.request.user.username                
             else:                
-                form.instance.usuario_rechazo = self.request.user.username
-            
+                form.instance.usuario_rechazo = self.request.user.username            
         return super().form_valid(form)
 
 # def book_detail(request, book_id):

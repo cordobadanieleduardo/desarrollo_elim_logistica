@@ -299,7 +299,6 @@ class Distances (models.Model):
         return self.id
 
 class PerfilConductor(models.Model):
-    
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.CASCADE)
     
@@ -314,7 +313,6 @@ class GastoConductor(ClaseModelo):
         GASOLINA = "gasolina", _("Gasolina")
         PEAJE = "peaje", _("Peajes")
         OTRO = "otro", _("Otro")
-
     numero_registro = models.UUIDField(default=uuid.uuid4,max_length=80)    
     fecha = models.DateTimeField(blank=True, null=True)
     concepto = models.CharField(max_length=15,choices=Concepto,default=Concepto.GASOLINA)

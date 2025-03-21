@@ -62,6 +62,7 @@ urlpatterns = [
     
 
     path('gastos/',views.GastoConductorView.as_view(), name='gasto_list'),
+    # path('gastos/',views.gastoConductorView, name='gasto_list'),
     path('gastos/new',views.GastoConductorNew.as_view(), name='gasto_new'),
     path('gastos/edit/<int:pk>',views.GastoConductorEdit.as_view(), name='gasto_edit'),
     path('gastos/detail/<int:pk>',views.GastoConductorDetailView.as_view(), name='gasto_detail'),

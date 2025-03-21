@@ -9,16 +9,16 @@ from django.core.paginator import Paginator, EmptyPage,PageNotAnInteger
 from django.core.serializers.json import DjangoJSONEncoder  
 from django.http import JsonResponse
 from decimal import Decimal
-
+from datetime import datetime
 from .serializers import ClienteSerializer, GastoConductorSerializer
 from elim.models import Cliente, GastoConductor, PerfilConductor
+from elim.filterset import GastoConductorFilter
 
 import json
 
 class ClienteList(APIView):
     def get(self,request):    
         return Response(ClienteSerializer(Cliente.objects.all(),many=True).data)
-
 
 def gastoConductorListReloadAux(request):    
     draw = (request.GET.get('draw'))
@@ -81,44 +81,111 @@ def gastoConductorListReloadAux(request):
     }
     return JsonResponse(context, safe=False)
 
+class GastoConductorList(APIView):
+    # def get(self):
+    #     if fecha:= self.request.GET.get('fecha'):   
+    #         date = datetime.strptime(fecha,'%d/%m/%Y').replace(hour=0,minute=0,second=0,microsecond=0)        
+    #         queryset:BaseManager[GastoConductor] = GastoConductor.objects.filter(estado=True, fecha__range=(date, date.replace(hour=23,minute=59,second=59,microsecond=999999))).order_by('-id')        
+    #         if self.request.user.is_superuser:            
+    #             queryset = queryset
+    #         elif perfil := PerfilConductor.objects.filter(usuario = self.request.user).first():
+    #             queryset = queryset.filter(vehiculo = perfil.vehiculo)           
+    #         return Response(GastoConductorSerializer(queryset,many=True))
+    #     else:
+    #         date = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+    #         end_date = date.replace(hour=23,minute=59,second=59,microsecond=999999)   
+    #         queryset:BaseManager[GastoConductor] = GastoConductor.objects.filter(estado=True, fecha__range=(date, end_date)).order_by('-id')
+    #         if self.request.user.is_superuser:            
+    #             queryset = queryset
+    #         elif perfil := PerfilConductor.objects.filter(usuario = self.request.user).first():
+    #             queryset = queryset.filter(vehiculo = perfil.vehiculo)
+            
+    #         return Response(GastoConductorSerializer(GastoConductor.objects.all()))
+    
+    
+    def get_queryset(self):
+        queryset = super().get_queryset() #super(GastoConductor, self).get_queryset()        
+        if fecha:= self.request.GET.get('fecha'):   
+            date = datetime.strptime(fecha,'%d/%m/%Y').replace(hour=0,minute=0,second=0,microsecond=0)        
+            queryset:BaseManager[GastoConductor] = GastoConductor.objects.filter(estado=True, fecha__range=(date, date.replace(hour=23,minute=59,second=59,microsecond=999999))).order_by('-id')        
+            if self.request.user.is_superuser:            
+                queryset = queryset
+                return queryset
+            elif perfil := PerfilConductor.objects.filter(usuario = self.request.user).first():
+                queryset = queryset.filter(vehiculo = perfil.vehiculo)                           
+                return queryset
+        else:
+            date = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+            end_date = date.replace(hour=23,minute=59,second=59,microsecond=999999)   
+            queryset:BaseManager[GastoConductor] = GastoConductor.objects.filter(estado=True, fecha__range=(date, end_date)).order_by('-id')
+            if self.request.user.is_superuser:            
+                queryset = queryset
+            elif perfil := PerfilConductor.objects.filter(usuario = self.request.user).first():
+                queryset = queryset.filter(vehiculo = perfil.vehiculo)        
+            return queryset
 
-def gastoConductorListReload(request):        
-    queryset:BaseManager[GastoConductor] = GastoConductor.objects.filter(estado=True).order_by('-id')
+def gastoConductorList(request):
+   def get(self,request):
+        queryset:BaseManager[GastoConductor] = GastoConductor.objects.all() 
+        if factura:= self.request.GET.get('factura'):                   
+            queryset = queryset.filter(estado=True, factura=factura)    
+        if self.request.user.is_superuser:            
+            queryset = queryset
+        elif perfil := PerfilConductor.objects.filter(usuario = self.request.user).first():
+            queryset = queryset.filter(vehiculo = perfil.vehiculo)          
+        return Response(
+            GastoConductorSerializer(
+                queryset.order_by('-id'),
+                many=True
+            ).data)
+
+def scale_color(valor):
+    if(valor<10000):
+        return 'red'
+    elif(valor>10000 and valor<20000):
+        return 'orange'
+    elif(valor>=20000 and valor<40000):
+        return 'blue'
+    elif(valor>=100000 and valor<500000):
+        return 'green'
+    elif(valor>=500000):
+        return '#2ce229'
+
+def gastoConductorListReload(request):
+    
+    queryset:BaseManager[GastoConductor] = GastoConductor.objects.all()   
+    if fecha:= request.GET.get('fecha'):   
+        date = datetime.strptime(fecha,'%d/%m/%Y').replace(hour=0,minute=0,second=0,microsecond=0)
+        end_date = date.replace(hour=23,minute=59,second=59,microsecond=999999)        
+        queryset= queryset.filter(fecha__range=(date, end_date))
+
+    # if factura:= request.GET.get('factura'):                   
+    #     queryset = queryset.filter(factura__icontains=factura)  
+    
+    # if medio_pago:= request.GET.get('medio_pago'):          
+    #     queryset = queryset.filter(medio_pago__icontains=medio_pago,)
+
     if request.user.is_superuser:            
-        queryset = queryset
+        queryset = queryset.order_by('-id')
     elif perfil := PerfilConductor.objects.filter(usuario = request.user).first():
-        queryset = queryset.filter(vehiculo = perfil.vehiculo)        
-    def s_color(valor):
-        if(valor<10000):
-            return 'red'
-        elif(valor>=10000 and valor<20000):
-            return 'orange'
-        elif(valor>=20000 and valor<40000):
-            return 'blue'
-        elif(valor>=100000 and valor<500000):
-            return 'green'
-        elif(valor>=500000):
-            return 'yellow'    
-    datos = [
-        {
-            "id": d.id,
-            "fecha": d.fecha,
-            "estado_aceptacion":d.estado_aceptacion,
-            "concepto": d.concepto,
-            "medio_pago": d.medio_pago,
-            "factura": str(d.factura),
-            "color": s_color(d.valor),
-            "valor": d.valor,
-            "efectivo":d.efectivo,
-            "credito":d.credito,
-            "transferencia":d.transferencia,
-            "descripcion": d.descripcion,
-        } for d in queryset
-    ]
-    context = {'data':datos}
-    return JsonResponse(context)
+        queryset = queryset.filter(estado = True, vehiculo = perfil.vehiculo).order_by('-id')
+    filter_gasto = GastoConductorFilter(request.GET, queryset)    
+    datos = [ {
+        "id":d.id,"fecha":d.fecha,
+        "estado_aceptacion":d.estado_aceptacion,
+        "concepto":d.concepto,
+        "medio_pago":d.medio_pago,
+        "factura":str(d.factura),
+        "color":scale_color(d.valor),
+        "valor":d.valor,
+        "efectivo":d.efectivo,
+        "credito":d.credito,
+        "transferencia":d.transferencia,
+        "descripcion":d.descripcion,
+    } for d in filter_gasto.qs][:1000]
+    return JsonResponse({'data':datos})
 
-class GastoConductorList(generics.ListAPIView):
+class GastoConductorAPIList(generics.ListAPIView):
     queryset = GastoConductor.objects.filter(estado=True).order_by('-id')
     serializer_class = GastoConductorSerializer
     

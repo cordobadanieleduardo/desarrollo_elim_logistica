@@ -3,9 +3,11 @@ from django.contrib.admin.widgets import AutocompleteSelect
 from django.core.exceptions import ValidationError
 from django.contrib import admin
 from django import forms
+from django.utils.translation import gettext_lazy as _
+from datetime import datetime,date
+
 from .models import *
 
-import datetime
 
 
 class ClienteForm(forms.ModelForm):
@@ -119,7 +121,7 @@ class RegistroForm(forms.ModelForm):
 
 class ServicioForm(forms.ModelForm):
 
-    fecha = forms.DateField(initial=datetime.datetime.today)    
+    fecha = forms.DateField(initial=datetime.today())    
     # cliente = forms.ModelChoiceField(queryset=Cliente.objects.filter(estado=True))
     # placa = forms.ModelChoiceField(queryset=Vehiculo.objects.filter(estado=True))    
     # programador = forms.ModelChoiceField(queryset=Programador.objects.filter(estado=True))    
@@ -351,6 +353,21 @@ class VehiculoForm(forms.ModelForm):
         # self.fields['zipcode'].widget.attrs['type'] = 'number'
         # self.fields['zipcode'].widget.attrs['max'] = '100000'
 
+class GastoConductorFormFilter(forms.Form):
+    fecha = forms.DateField(initial=datetime.now(),required=False) 
+    factura = forms.CharField(required=False, max_length=15) 
+    medio_pago = forms.ChoiceField(choices=Medio_pago, required=False,)
+    class Meta:
+        exclude = ['medio_pago']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args,**kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({'class':'form-control'})   
+        self.fields['fecha'].widget.attrs['autocomplete'] = "off"
+        self.fields['fecha'].widget.attrs['value'] = date.today().strftime("%d/%m/%Y")
+        # self.fields['factura'].widget.attrs['type'] = "search"
+    
 class GastoConductorForm(forms.ModelForm):
     # fecha = forms.DateField(initial=datetime.datetime.today)    
     # valor = forms.CharField(initial='', required=True,max_length=6,
