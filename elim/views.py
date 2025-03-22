@@ -943,7 +943,7 @@ class GastoConductorView(SinPrivilegios, generic.ListView):
     ordering = ['-id']
     serializer_class = GastoConductorSerializer
     filter_backends = (filters2.DjangoFilterBackend,)
-    filterset_fields = ('fecha', 'factura','medio_pago')
+    filterset_fields = ('fecha', 'factura')
     
     def get_context_data(self, **kwargs):    
         context = super().get_context_data(**kwargs)
@@ -960,33 +960,37 @@ class GastoConductorNew(VistaBaseCreate):
     success_message="Gasto creado satisfactoriamente"
     permission_required="elim.add_gastoconductor"
 
+    # def get(self, request, *args, **kwargs):
+    #     self.object = self.get_object()
+    #     context = self.get_context_data(object=self.object)
+    #     return self.render_to_response(context)
+
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        registro = GastoConductor(fecha = datetime.now)
-        context ['obj'] = registro
+        context = super().get_context_data(**kwargs)        
+        perfil=PerfilConductor.objects.filter(usuario = self.request.user).first()
+        if perfil and self.request.user.is_superuser == False:
+            vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo.pk)
+            context ['obj'] = GastoConductor(fecha = datetime.now(), vehiculo=vehiculo)
         return context
     
     def form_invalid(self, form, **kwargs):
-        context = super().get_context_data(**kwargs)        
-        if self.request.POST:
-            # form = GastoConductorForm(self.request.POST, self.request.FILES)            
-            registro = GastoConductor(
-                fecha = self.request.POST.get('fecha'),
-                valor = self.request.POST.get('valor')
-            )
-            form.instance.fecha = registro.fecha
-            context ['obj'] = registro
-            context ['form'] = form
-        return render(self.request, self.template_name)
+        context = super().get_context_data(**kwargs)
+        return render(self.request, self.template_name, context)
     
     def form_valid(self, form):
-        form.instance.uc = self.request.user
-        if perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():        
+        form.instance.uc = self.request.user        
+        if perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():
             vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo.pk)
-            form.instance.vehiculo = vehiculo
-            form.instance.placa = perfil.vehiculo_id
-            form.instance.cedula = vehiculo.conductor.cedula
-            form.instance.conductor = vehiculo.conductor.nombre
+            if self.request.user.is_superuser and vehiculo :
+                form.instance.cedula = 1000000
+                form.instance.conductor = 'Creado por superuser'                
+                form.instance.placa = perfil.vehiculo_id
+            # si es conductor
+            elif vehiculo :                
+                form.instance.cedula = vehiculo.conductor.cedula
+                form.instance.conductor = vehiculo.conductor.nombre
+                form.instance.placa = vehiculo.placa
+            
         return super().form_valid(form)
 
 class GastoConductorEdit(VistaBaseEdit):
@@ -1000,7 +1004,25 @@ class GastoConductorEdit(VistaBaseEdit):
     
     def get(self, request, pk):
         try:
-            reg = GastoConductor.objects.get(id=pk)
+            reg = (GastoConductor.objects.get(id=pk))
+            if self.request.user.is_superuser == False and reg.estado_aceptacion in[True, False]:                
+                estado_text ='Ninguno'
+                if reg.estado_aceptacion is None:
+                    estado_text= 'Por revisar'                    
+                elif bool(reg.estado_aceptacion):
+                    estado_text = 'Aceptado. No requiere edición'
+                else: 
+                    estado_text = 'Rechazado'
+                messages.success(request,f'Gasto tiene un estado {estado_text}') 
+                return redirect('elim:gasto_list')
+
+            perfil = PerfilConductor.objects.filter(usuario = self.request.user).first()
+            if perfil and self.request.user.is_superuser == False:
+                vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo)
+                if vehiculo.placa != reg.vehiculo.placa:                                   
+                    messages.success(request,'Id no pertenece al conductor') 
+                    return redirect('elim:gasto_list')
+        
             form = GastoConductorForm (instance=reg)            
             context = {'form': form,'obj': reg}
             return render(request, self.template_name, context)
@@ -1015,20 +1037,23 @@ class GastoConductorEdit(VistaBaseEdit):
         return render(self.request, self.template_name, context)
 
     def form_valid(self, form):
-        form.instance.um = self.request.user.id
-        if perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():            
+        if self.request.user.is_superuser == False and form.instance.estado_aceptacion == True:                
+            messages.success(self.request,'Se encuentrada aceptado el gasto ') 
+            return redirect('elim:gasto_list')
+        form.instance.um = self.request.user.id        
+        if perfil:=PerfilConductor.objects.filter(usuario = self.request.user).first():
             vehiculo = Vehiculo.objects.get(placa=perfil.vehiculo)
-            form.instance.vehiculo = vehiculo
-            form.instance.placa = perfil.vehiculo_id
-            form.instance.cedula = vehiculo.conductor.cedula
-            form.instance.conductor = vehiculo.conductor.nombre                        
-            if form.instance.estado_aceptacion is None:                
-                form.instance.usuario_aceptacion = None
-                form.instance.usuario_rechazo = None
-            elif bool(form.instance.estado_aceptacion):                
-                form.instance.usuario_aceptacion = self.request.user.username                
-            else:                
-                form.instance.usuario_rechazo = self.request.user.username            
+            if vehiculo and self.request.user.is_superuser:            
+                if form.instance.estado_aceptacion is None:                
+                    form.instance.usuario_aceptacion = None
+                    form.instance.usuario_rechazo = None
+                elif bool(form.instance.estado_aceptacion):                
+                    form.instance.usuario_aceptacion = self.request.user.username                
+                else:                
+                    form.instance.usuario_rechazo = self.request.user.username        
+            elif vehiculo and self.request.user.is_superuser == False:                                        
+                form.instance.cedula = vehiculo.conductor.cedula
+                form.instance.conductor = vehiculo.conductor.nombre
         return super().form_valid(form)
 
 # def book_detail(request, book_id):

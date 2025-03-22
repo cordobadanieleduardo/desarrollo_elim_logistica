@@ -369,28 +369,29 @@ class GastoConductorFormFilter(forms.Form):
         # self.fields['factura'].widget.attrs['type'] = "search"
     
 class GastoConductorForm(forms.ModelForm):
-    # fecha = forms.DateField(initial=datetime.datetime.today)    
+    # fecha = forms.DateField(initial=datetime.now())    
     # valor = forms.CharField(initial='', required=True,max_length=6,
     #                              widget=forms.TextInput(attrs={'max': "1000000",'min': "1000" })
     #                              )
     class Meta:
         model = GastoConductor
-        fields = ( 'fecha','factura','valor','concepto','medio_pago','descripcion','imagen','estado_aceptacion')
+        fields = ( 'fecha','factura','valor','concepto','medio_pago','descripcion','imagen','estado_aceptacion','vehiculo',)
         exclude = ['um','fm','uc','fc','numero_registro','placa','cedula','conductor',
-                'vehiculo', 'efectivo', 'credito', 'transferencia',
+                'efectivo', 'credito', 'transferencia',
                 'usuario_aceptacion','usuario_rechazo'
         ]
-        # wiget = {
-        #     'fecha':forms.DateTimeInput(),
-        # }
+        wiget = {
+            'descripcion':forms.TextInput(),
+        }
     def __init__(self, *args, **kwargs):
         super().__init__(*args,**kwargs)
-        # self.fields['pais'].query_set = Pais.objects.all()        
         for field in iter(self.fields):
-            self.fields[field].widget.attrs.update({'class':'form-control'})
-        
-        # self.fields['valor'].validators.append(MaxValueValidator(9999999.99))
-        # self.fields['fecha'].widget.attrs['value'] = datetime.date.ctimeT
+            self.fields[field].widget.attrs.update({'class':'form-control'})        
+        self.fields['fecha'].widget.attrs['autocomplete'] = 'off'
+        self.fields['fecha'].widget.attrs['value'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S") 
+        self.fields['fecha'].widget.attrs['maxlength'] = '19'
+        self.fields['fecha'].widget.attrs['required'] = 'true'
+        self.fields['descripcion'].widget.attrs['row'] = 'true'
 
     def clean_valor(self):
         valor = self.cleaned_data['valor']

@@ -183,3 +183,5 @@ LOGOUT_REDIRECT_URL = '/login/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 BASE_COUNTRY = 'CO'
+
+# AUTH_USER_MODEL = 'bases.User'

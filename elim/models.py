@@ -20,7 +20,7 @@ class Trayecto(ClaseModelo):
     place_id = models.CharField(max_length=200,blank=True, null=True)
 
     def __str__(self):
-        return '{}'.format(self.direccion)
+        return f'{self.direccion}'
     
     def save(self):
         super(Trayecto,self).save()
@@ -35,7 +35,7 @@ class Persona(ClaseModelo):
     celular = models.CharField(max_length=10,help_text= "Número de celular")
     
     def __str__(self):
-        return '{}'.format(self.nombre)
+        return f'{self.nombre}'
     
     def save(self):
         super(Persona,self).save()
@@ -47,7 +47,7 @@ class Cliente(ClaseModelo):
     nombre = models.CharField(max_length=50,help_text= "Nombre del cliente")
     
     def __str__(self):
-        return '{}'.format(self.nombre)
+        return f'{self.nombre}'
     
     def save(self):
         super(Cliente,self).save()
@@ -55,7 +55,7 @@ class Cliente(ClaseModelo):
     class Meta:
         ordering = ['nombre']
         verbose_name_plural = 'Clientes'
-        
+
 
 class Proveedor(ClaseModelo):
     nombre = models.CharField(max_length=50,help_text= "Nombre del proveedor")

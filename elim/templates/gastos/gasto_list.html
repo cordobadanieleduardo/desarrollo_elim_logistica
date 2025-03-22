@@ -150,6 +150,15 @@
                 "sSortDescending": ": Activar para ordenar la columna de manera descendente"
             },
         },
+        // layout: {
+        //     topStart: {
+        //         buttons: [
+        //             { extend: 'crear',  },
+        //             { extend: 'editar',  },
+        //             { extend: 'quitar',  }
+        //         ]
+        //     }
+        // },
     };
 
     const initDataTable = async () => {
@@ -163,30 +172,11 @@
 
     const listProgrammers = async () => {
         try {            
-            const fecha = $("#id_fecha").val();
-            const factura = $("#id_factura").val();
-            const pago = $("#id_medio_pago").val();
-            let sUrl = '/api/v1/gastos/reload/';        
-            var response;    
-            if(fecha != undefined || fecha != "" ){                
-                sUrl+="?fecha="+fecha;
-            }
-            if(factura != undefined || factura != ""){
-                sUrl+="&factura="+factura;
-            }
-            // if(pago != undefined || pago != ""){
-            //     sUrl+="&medio_pago="+pago;
-            // }
-            if((fecha != undefined || fecha != "") & (factura != factura || factura != "") ){                
-                response = await fetch(sUrl);
-            } else if (fecha != undefined || fecha != "" ){
-                response = await fetch(sUrl);
-            } else {
-                response = await fetch("{% url 'api:gastos_list_reload' %}");
-            }  
-            
+            const sUrl = '/api/v1/gastos/reload/?';
+            const param= $( "form" ).serialize();        
+            const response = await fetch(sUrl+param);                    
             const data = await response.json();
-            let content = ``;            
+            let content = ``;                           
             data.data.forEach((item, index) => {
                 content += `
                 <tr>
@@ -196,8 +186,16 @@
                         `<a href="/elim/gastos/edit/${item.id}" > <i class="far fa-edit" style='color:green;'></i> </a>
                         <a href="#" onclick="return abrir_modal('/elim/gastos/detail/${item.id}')">Imagen</a>    
                         `:
+                        item.estado_aceptacion === false && "{{request.user.is_superuser}}" === "True" ?
+                        `<a href="/elim/gastos/edit/${item.id}" > <i class="far fa-edit" style='color:green;'></i> </a>
+                        <a href="#" onclick="return abrir_modal('/elim/gastos/detail/${item.id}')">Imagen</a>    
+                        `:
                         item.estado_aceptacion === false ?
                         `<a href="#" class="pe-none" tabindex="-1" aria-disabled="true" > <i class="far fa-edit" style='color:red;'></i> </a>
+                        <a href="#" onclick="return abrir_modal('/elim/gastos/detail/${item.id}')">Imagen</a>    
+                        `:
+                        item.estado_aceptacion === true && "{{request.user.is_superuser}}" === "True" ?
+                        `<a href="/elim/gastos/edit/${item.id}" > <i class="far fa-edit" style='color:blue;'></i> </a>
                         <a href="#" onclick="return abrir_modal('/elim/gastos/detail/${item.id}')">Imagen</a>    
                         `:
                         `<span> <i class="far fa-address-card"></i> </span>
@@ -248,17 +246,17 @@
         // firstDay: 1,
         defaultDate:new Date(),
         // minDate: 0, /** AAAA,MM,DD Fecha inicio */
-        maxDate: new Date( new Date().getFullYear, 12, 31),
+        maxDate: new Date( new Date().getFullYear(), 12, 31),
         allowTimes:[
         '12:00', '13:00', '15:00',
         '17:00', '17:05', '17:20', '19:00', '20:00'
         ],
         icons: {
-                  time: "fa fa-clock-o",
-                  date: "fa fa-calendar",
-                  up: "fa fa-arrow-up",
-                  down: "fa fa-arrow-down"
-              }
+            time: "fa fa-clock-o",
+            date: "fa fa-calendar",
+            up: "fa fa-arrow-up",
+            down: "fa fa-arrow-down"
+        }
     });
     // }).setLocale('es');
 </script>
