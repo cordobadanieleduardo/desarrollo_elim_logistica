@@ -146,7 +146,7 @@ GOOGLE_API_KEY = 'AIzaSyAFYqG1ONwV4Ob6BloUnchNZeKLNF3Hm94'
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'es-ES'
+LANGUAGE_CODE = 'es-co'
 
 TIME_ZONE = 'America/Bogota'
 
@@ -185,3 +185,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 BASE_COUNTRY = 'CO'
 
 # AUTH_USER_MODEL = 'bases.User'
+
+#USE_THOUSAND_SEPARATOR = false

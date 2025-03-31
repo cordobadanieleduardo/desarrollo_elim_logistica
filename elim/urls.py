@@ -63,7 +63,7 @@ urlpatterns = [
 
     path('gastos/',views.GastoConductorView.as_view(), name='gasto_list'),
     # path('gastos/',views.gastoConductorView, name='gasto_list'),
-    path('gastos/new',views.GastoConductorNew.as_view(), name='gasto_new'),
+    path('gastos/new/',views.GastoConductorNew.as_view(), name='gasto_new'),
     path('gastos/edit/<int:pk>',views.GastoConductorEdit.as_view(), name='gasto_edit'),
     path('gastos/detail/<int:pk>',views.GastoConductorDetailView.as_view(), name='gasto_detail'),
     
@@ -79,6 +79,16 @@ urlpatterns = [
     path('conductor/viaje/reporte/list/',views.ViajeView.as_view(), name='repo_viaje_list'),    
     path('conductor/viaje/reporte/detail/<int:pk>',views.ViajeDetailView.as_view(), name='repo_viaje_detail'),
     
+    path('status/',views.StatusDetailView.as_view(), name='status_list'),
+    path('status/<str:pk>/',views.vehiculo_activar_inactivar, name='status_activarinact_list'),
+    # path('status/<str:pk>/(?:page(?P<page_number>[0-9]+)/)?$',views.vehiculo_activar_inactivar, name='status_activarinact_list'),
+    path('status/mecanico/<str:pk>/',views.vehiculo_cambiar_mecanico, name='status_cambiar_mecanico_list'),
+    path('status/restaurante/<str:pk>/',views.vehiculo_cambiar_restaurante, name='status_cambiar_restaurante_list'),
+    path('status/enfermo/<str:pk>/',views.vehiculo_cambiar_enfermo, name='status_cambiar_enfermo_list'),
+    path('status/color/<str:pk>/',views.vehiculo_status_disponibilidad, name='status_cambiar_color_list'),
+    path('status/edit/<str:pk>/',views.StatusEdit.as_view(), name='status_edit'),
+    
+    path('panel/',views.panelView, name='panel_view'),
 ]
 
 

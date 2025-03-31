@@ -40,7 +40,7 @@
                 <form action="{% url 'elim:gasto_list' %}" method="get">                    
                     <div class="col-md-12">
                         <div class="col-md-3">
-                            Fecha: {{form.fecha}}
+                            Fecha:{{form.fecha}}
                         </div>
                         <div class="col-md-3">
                             Factura:{{form.factura}}
@@ -78,7 +78,8 @@
                 <th class="all"> Id</th>                
                 <th class="all"> Acciones</th>
                 <th>Fecha</th>                
-                <th>Estado</th>                
+                <th>Estado</th>
+                <th>Placa</th>                
                 <th>Concepto</th>
                 <th>Medio</th>
                 <th>N° Factura</th>
@@ -165,16 +166,17 @@
         if (dataTableIsInitialized) {
             dataTable.destroy();
         }
-        await listProgrammers();
+        await list();
         dataTable = $("#table").DataTable(dataTableOptions);
         dataTableIsInitialized = true;
     };
 
-    const listProgrammers = async () => {
+    const list = async () => {
         try {            
-            const sUrl = '/api/v1/gastos/reload/?';
+            // const sUrl = '/api/v1/gastos/reload/?';
+            const sUrl = "{% url 'api:gastos_list_reload' %}";            
             const param= $( "form" ).serialize();        
-            const response = await fetch(sUrl+param);                    
+            const response = await fetch(sUrl+"?"+param);                    
             const data = await response.json();
             let content = ``;                           
             data.data.forEach((item, index) => {
@@ -209,6 +211,7 @@
                          `<span style='color:red;'> Rechazado </span>`:
                          'Por revisar'}
                     </td>
+                    <td>${item.vehiculo_placa}</td>
                     <td>${item.concepto}</td>
                     <td>${item.medio_pago}</td>
                     <td>${item.factura}</td>
@@ -244,19 +247,19 @@
         },
         // yearRange: "2024:2025", 
         // firstDay: 1,
-        defaultDate:new Date(),
+        // defaultDate:new Date(),
         // minDate: 0, /** AAAA,MM,DD Fecha inicio */
-        maxDate: new Date( new Date().getFullYear(), 12, 31),
-        allowTimes:[
-        '12:00', '13:00', '15:00',
-        '17:00', '17:05', '17:20', '19:00', '20:00'
-        ],
-        icons: {
-            time: "fa fa-clock-o",
-            date: "fa fa-calendar",
-            up: "fa fa-arrow-up",
-            down: "fa fa-arrow-down"
-        }
+        // maxDate: new Date( new Date().getFullYear(), 12, 31),
+        // allowTimes:[
+        // '12:00', '13:00', '15:00',
+        // '17:00', '17:05', '17:20', '19:00', '20:00'
+        // ],
+        // icons: {
+        //     time: "fa fa-clock-o",
+        //     date: "fa fa-calendar",
+        //     up: "fa fa-arrow-up",
+        //     down: "fa fa-arrow-down"
+        // }
     });
     // }).setLocale('es');
 </script>

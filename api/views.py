@@ -173,6 +173,8 @@ def gastoConductorListReload(request):
     datos = [ {
         "id":d.id,"fecha":d.fecha,
         "estado_aceptacion":d.estado_aceptacion,
+        "is_superuser":request.user.is_superuser,        
+        "vehiculo_placa":str(d.vehiculo_id).upper(),
         "concepto":d.concepto,
         "medio_pago":d.medio_pago,
         "factura":str(d.factura),

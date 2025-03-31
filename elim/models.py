@@ -103,9 +103,9 @@ class Vehiculo(ClaseModelo):
     conductor = models.ForeignKey(Conductor,on_delete=models.PROTECT,max_length=50)    
     hora = models.DateTimeField()
     disponibilidad = models.CharField(max_length=10,choices=Disponibilidad,default=Disponibilidad.INACTIVO)
-    mecanico = models.BooleanField(default=False)
-    restaurante = models.BooleanField(default=False)
-    enfermo = models.BooleanField(default=False)
+    mecanico = models.BooleanField(default=False,blank=True, null=True)
+    restaurante = models.BooleanField(default=False,blank=True, null=True)
+    enfermo = models.BooleanField(default=False,blank=True, null=True)
     ubicacion = models.ForeignKey(Trayecto,on_delete=models.RESTRICT,blank=True, null=True)
 
 
@@ -355,6 +355,7 @@ class GastoConductor(ClaseModelo):
             self.efectivo = float(0)
 
         return super().save()
+    
     
 
 class Viaje(models.Model): 
