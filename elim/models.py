@@ -222,6 +222,17 @@ class Medio_pago(models.TextChoices):
         TRANSFERENCIA = "TRANSFERENCIA", _("Transferencia")
         CHIP = "CHIP", _("Chip")
 
+class Legalizado(models.TextChoices):
+    Sin_legalizar = "Sin legalizar", _("Sin legalizar")
+    Legalizado = "Legalizado", _("Legalizado")
+
+class Status(models.TextChoices):
+    Creado = "creado", _("Creado")        
+    Ejecutado = "ejecutado", _("Ejecutado")
+    Cotizado = "cotizado", _("Cotizado")
+    Facturado = "facturado", _("Facturado")
+    no_show = "no_show", _("NO SHOW")
+
 class Registro(ClaseModelo):    
     numero_registo = models.UUIDField(default=uuid.uuid4,max_length=80)    
     fecha = models.DateTimeField(null=True,blank=True)
@@ -241,6 +252,12 @@ class Registro(ClaseModelo):
     credito = models.DecimalField(max_digits=9, decimal_places=2,default=0.0,blank=True)
     transferencia = models.DecimalField(max_digits=9, decimal_places=2,default=0.0,blank=True)
     porcentaje = models.DecimalField(max_digits=9, decimal_places=2,default=0.0,blank=True)
+    status = models.CharField(max_length=15,choices=Status,default=Status.Creado,null=False,blank=False)
+    cotizacion = models.CharField(max_length=20,null=False,blank=False)
+    factura = models.CharField(max_length=20,null=False,blank=False)
+    legalizado = models.CharField(max_length=15,choices=Legalizado,default=Legalizado.Sin_legalizar,null=False,blank=False)
+    
+    
     def __str__(self):
         return f"{self.direccion}, {self.placa}"        
         # return "%s %s" % (self.direccion, self.placa)        

@@ -35,13 +35,13 @@ body {
   display: flex;
   font-size: 14px;
   gap: 15px;
-  height: 30px;
+  height: 40px;
+  width: 40px;
   justify-content: center;
   padding: 4px;
   position: relative;
   position: relative;
   transition: all 0.3s ease-out;
-  width: 30px;
 }
 
 .property::after {
@@ -67,7 +67,7 @@ body {
 }
 
 .property .icon svg {
-  height: 20px;
+  height: 25px;
   width: auto;
 }
 

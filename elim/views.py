@@ -750,7 +750,20 @@ class MapView(View):
     def get(self,request): 
         # eligable_locations = Trayecto.objects.filter(place_id__isnull=False)
         # eligable_locations = Registro.objects.exclude(latitud__isnull=True,longitud__isnull=True)
-        eligable_locations = Registro.objects.filter(estado=True)
+        page_number = request.GET.get("page")
+        date = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)        
+        if fecha:=request.GET.get('fecha'):                
+            try:            
+                date = datetime.strptime(fecha,'%d/%m/%Y').replace(hour=0,minute=0,second=0,microsecond=0)
+            except Exception as e:
+                print('parametro fecha error',e)
+                
+        fecha = f'{date.day}/{date.month}/{date.year}'
+        eligable_locations = Registro.objects.filter(
+            # latitud__isnull=False,
+            # longitud__isnull=False,
+            fecha__range=(date, date.replace(
+                hour=23,minute=59,second=59,microsecond=999999))).order_by("-fecha")
         locations = []
         registros = []
         for a in eligable_locations: 
@@ -760,28 +773,65 @@ class MapView(View):
                 'direccion': str(a.direccion),
                 'celular': str(a.celular),
                 'cliente': str(a.cliente),
-                'valor':float(a.valor),
-                'type': 'home'
+                'valor': '$ '+"{:,.2f}".format(float(a.valor)),
+                'type': 'home',
+                'medio_pago': a.medio_pago,
             }
             locations.append(data)
             registros.append(data)
-        eligable_locations = Vehiculo.objects.filter(ubicacion_id__isnull=False)
+        eligable_vehi = Vehiculo.objects.filter(
+            ubicacion_id__isnull=False).annotate(
+            color=Case(
+                When(disponibilidad=Vehiculo.Disponibilidad.ACTIVO, then=Value("blue")),
+                When(disponibilidad=Vehiculo.Disponibilidad.INACTIVO, then=Value("black")),
+                When(disponibilidad=Vehiculo.Disponibilidad.ROJO, then=Value("red")),
+                When(disponibilidad=Vehiculo.Disponibilidad.VERDE, then=Value("green")),
+                default=Value("black")
+                ), icon=Case(
+                When(tipo=Vehiculo.Tipo.MINIVAN, then=Value("car")),
+                When(tipo=Vehiculo.Tipo.VAN, then=Value("truck")),
+                When(tipo=Vehiculo.Tipo.CAMION, then=Value("truck-loading")),
+                When(tipo=Vehiculo.Tipo.ESTACAS, then=Value("truck-monster")),
+                default=Value("train"),
+                ), color_mecanico=Case(
+                When(mecanico=True, then=Value("red")),
+                When(mecanico=False, then=Value("black")),         
+                default=Value("blue"),
+                ), color_restaurante=Case(
+                When(restaurante=True, then=Value("green")),
+                When(restaurante=False, then=Value("black")),         
+                default=Value("blue"),
+                ), color_enfermo=Case(
+                When(enfermo=True, then=Value("green")),
+                When(enfermo=False, then=Value("black")),         
+                default=Value("blue")),) 
         vehiculos = []
-        for a in eligable_locations: 
-            ubicacion = Trayecto.objects.get(pk=a.ubicacion_id)
+        for v in eligable_vehi: 
+            ubicacion = Trayecto.objects.get(pk=v.ubicacion_id)
             data = {
                 'lat': float(ubicacion.lat), 
                 'lng': float(ubicacion.lng), 
                 'direccion': str(ubicacion.direccion),
-                'celular': str(a.conductor),
-                'cliente': str(a.disponibilidad),
-                'valor': str(a.placa),
-                'type': 'truck'
+                'celular': str(v.conductor),
+                'cliente': str(v.disponibilidad),
+                'valor': str(v.placa),
+                'type': 'truck',
+                'tipo': v.tipo,
+                'color': v.color,
+                'icon': v.icon,
+                'conductor': v.conductor.nombre,
+                'mecanico': 'Si' if v.mecanico  else 'No',
+                'enfermo': 'Si' if v.enfermo   else 'No',
+                'restaurante': 'Si' if v.restaurante   else 'No',
             }
             # <i class="fa-solid fa-car-side"></i>
             locations.append(data)
             vehiculos.append(data)
+        form = PanelForm()
+        if self.request.method == 'GET':            
+            form = PanelForm(self.request.GET)
         context = {
+            "form":form,
             "key":settings.GOOGLE_API_KEY, 
             "locations": locations,
             "registros":registros,
