@@ -8,6 +8,7 @@ urlpatterns = [
     path('elim/',include(('elim.urls','elim'), namespace='elim')),
     path('api/', include(('api.urls', 'api'), namespace='api')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('viviana/',include(('viviana.urls','viviana'), namespace='viviana')),
     path('admin/', admin.site.urls),
 ]
 
